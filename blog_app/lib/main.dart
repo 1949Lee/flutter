@@ -73,11 +73,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (!mounted) return;
 
+    print(deviceData.identifierForVendor);
     setState(() {
       _identifierForVendor = deviceData.identifierForVendor;
     });
   }
-
 
   Future scan() async {
     try {
@@ -91,8 +91,9 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         setState(() => this.barcode = 'Unknown error: $e');
       }
-    } on FormatException{
-      setState(() => this.barcode = 'null (User returned using the "back"-button before scanning anything. Result)');
+    } on FormatException {
+      setState(() => this.barcode =
+          'null (User returned using the "back"-button before scanning anything. Result)');
     } catch (e) {
       setState(() => this.barcode = 'Unknown error: $e');
     }
@@ -122,64 +123,45 @@ class _MyHomePageState extends State<MyHomePage> {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
-        actions: <Widget>[IconButton(
-          icon: Icon(Icons.crop_free),
-          onPressed: scan,
-        )],
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.crop_free),
+            onPressed: scan,
+          )
+        ],
       ),
       body: Center(
           // Center is a layout widget. It takes a single child and positions it
           // in the middle of the parent.
-          child: Column(children: <Widget>[
-        Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('设备号为:'),
-            Text('$_identifierForVendor'),
-            Text(
-              '按钮被点击了:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-        Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(barcode)
-          ],
-        )
-      ])),
+          child: Column(
+        // Column is also a layout widget. It takes a list of children and
+        // arranges them vertically. By default, it sizes itself to fit its
+        // children horizontally, and tries to be as tall as its parent.
+        //
+        // Invoke "debug painting" (press "p" in the console, choose the
+        // "Toggle Debug Paint" action from the Flutter Inspector in Android
+        // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+        // to see the wireframe for each widget.
+        //
+        // Column has various properties to control how it sizes itself and
+        // how it positions its children. Here we use mainAxisAlignment to
+        // center the children vertically; the main axis here is the vertical
+        // axis because Columns are vertical (the cross axis would be
+        // horizontal).
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            '按钮被点击了:',
+          ),
+          Text(
+            '$_counter',
+            style: Theme.of(context).textTheme.display1,
+          ),
+          Text(
+            barcode
+          ),
+        ],
+      )),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
