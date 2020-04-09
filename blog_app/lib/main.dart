@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:device_info/device_info.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 void main() => runApp(MyApp());
 
@@ -53,11 +56,23 @@ class _MyHomePageState extends State<MyHomePage> {
   static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
   dynamic _identifierForVendor;
   String barcode = "";
+  TextEditingController _controller1;
+  TextEditingController _controller2;
+  String loginUrl = "";
+  String origin = "";
 
   @override
   void initState() {
     super.initState();
     initPlatformState();
+    _controller1 = TextEditingController();
+    _controller2 = TextEditingController();
+  }
+
+  void dispose() {
+    _controller1.dispose();
+    _controller2.dispose();
+    super.dispose();
   }
 
   Future<void> initPlatformState() async {
@@ -79,21 +94,53 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  ///登录方法
+  void _doLogin(String key) async {
+    try {
+      var passport = md5.convert(utf8.encode(key + _identifierForVendor));
+      Map<String, dynamic> param = {
+        "key":key,
+        "passport":"$passport"
+      };
+//    http://192.168.0.100:1016/confirm-login
+//    http://localhost:8080
+      var response = await http.post(loginUrl.toString(),body: jsonEncode(param),headers: {"Origin":origin,"Content-Type":"application/json"});
+      if (response.statusCode == 200) {
+        Map<String, dynamic> body = jsonDecode(response.body);
+        if (body['code'] == 0) {
+          print("确认登录成功，leeToken: ${body['data']['leeToken']}");
+        } else {
+          print("确认登录失败。$body");
+        }
+      } else {
+        print('Request failed with status: ${response.statusCode}.');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   Future scan() async {
     try {
       String barcode = await BarcodeScanner.scan();
-      setState(() => this.barcode = barcode);
+      Map<String, dynamic> content = json.decode(barcode);
+      switch (content['action']) {
+        case "login":
+          if (content['key'] != null) {
+            _doLogin(content['key']);
+          }
+          break;
+        default:
+          break;
+      }
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.CameraAccessDenied) {
-        setState(() {
-          this.barcode = 'The user did not grant the camera permission!';
-        });
+//        用户拒绝授权
       } else {
-        setState(() => this.barcode = 'Unknown error: $e');
+//        未知错误
       }
     } on FormatException {
-      setState(() => this.barcode =
-          'null (User returned using the "back"-button before scanning anything. Result)');
+//      用户没有扫描，直接取消
     } catch (e) {
       setState(() => this.barcode = 'Unknown error: $e');
     }
@@ -107,6 +154,19 @@ class _MyHomePageState extends State<MyHomePage> {
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
       _counter++;
+    });
+  }
+
+  void _setURL(String value) {
+    setState(() {
+      loginUrl = value;
+    });
+  }
+
+
+  void _setOrigin(String value) {
+    setState(() {
+      origin = value;
     });
   }
 
@@ -131,37 +191,46 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: Center(
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
+        // Center is a layout widget. It takes a single child and positions it
+        // in the middle of the parent.
           child: Column(
-        // Column is also a layout widget. It takes a list of children and
-        // arranges them vertically. By default, it sizes itself to fit its
-        // children horizontally, and tries to be as tall as its parent.
-        //
-        // Invoke "debug painting" (press "p" in the console, choose the
-        // "Toggle Debug Paint" action from the Flutter Inspector in Android
-        // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-        // to see the wireframe for each widget.
-        //
-        // Column has various properties to control how it sizes itself and
-        // how it positions its children. Here we use mainAxisAlignment to
-        // center the children vertically; the main axis here is the vertical
-        // axis because Columns are vertical (the cross axis would be
-        // horizontal).
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            '按钮被点击了:',
-          ),
-          Text(
-            '$_counter',
-            style: Theme.of(context).textTheme.display1,
-          ),
-          Text(
-            barcode
-          ),
-        ],
-      )),
+            // Column is also a layout widget. It takes a list of children and
+            // arranges them vertically. By default, it sizes itself to fit its
+            // children horizontally, and tries to be as tall as its parent.
+            //
+            // Invoke "debug painting" (press "p" in the console, choose the
+            // "Toggle Debug Paint" action from the Flutter Inspector in Android
+            // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+            // to see the wireframe for each widget.
+            //
+            // Column has various properties to control how it sizes itself and
+            // how it positions its children. Here we use mainAxisAlignment to
+            // center the children vertically; the main axis here is the vertical
+            // axis because Columns are vertical (the cross axis would be
+            // horizontal).
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              TextField(
+                controller: _controller1,
+                onSubmitted: _setURL,
+              ),
+              TextField(
+                controller: _controller2,
+                onSubmitted: _setOrigin,
+              ),
+              Text(
+                '按钮被点击了:',
+              ),
+              Text(
+                '$_counter',
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .display1,
+              ),
+              Text(barcode),
+            ],
+          )),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
