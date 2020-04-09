@@ -59,7 +59,17 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _controller1;
   TextEditingController _controller2;
   String loginUrl = "";
-  String origin = "";
+  String origin = "http://localhost:8080";
+  final List<Map<String, String>> originItems = <Map<String, String>>[
+    {
+      "value": "http://localhost:8080",
+      "text": "本地",
+    },
+    {
+      "value": "https://www.jiaxuanlee.com",
+      "text": "线上",
+    },
+  ];
 
   @override
   void initState() {
@@ -98,13 +108,12 @@ class _MyHomePageState extends State<MyHomePage> {
   void _doLogin(String key) async {
     try {
       var passport = md5.convert(utf8.encode(key + _identifierForVendor));
-      Map<String, dynamic> param = {
-        "key":key,
-        "passport":"$passport"
-      };
+      Map<String, dynamic> param = {"key": key, "passport": "$passport"};
 //    http://192.168.0.100:1016/confirm-login
 //    http://localhost:8080
-      var response = await http.post(loginUrl.toString(),body: jsonEncode(param),headers: {"Origin":origin,"Content-Type":"application/json"});
+      var response = await http.post(loginUrl.toString(),
+          body: jsonEncode(param),
+          headers: {"Origin": origin, "Content-Type": "application/json"});
       if (response.statusCode == 200) {
         Map<String, dynamic> body = jsonDecode(response.body);
         if (body['code'] == 0) {
@@ -163,13 +172,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
-  void _setOrigin(String value) {
-    setState(() {
-      origin = value;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -191,46 +193,54 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+          // Center is a layout widget. It takes a single child and positions it
+          // in the middle of the parent.
           child: Column(
-            // Column is also a layout widget. It takes a list of children and
-            // arranges them vertically. By default, it sizes itself to fit its
-            // children horizontally, and tries to be as tall as its parent.
-            //
-            // Invoke "debug painting" (press "p" in the console, choose the
-            // "Toggle Debug Paint" action from the Flutter Inspector in Android
-            // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-            // to see the wireframe for each widget.
-            //
-            // Column has various properties to control how it sizes itself and
-            // how it positions its children. Here we use mainAxisAlignment to
-            // center the children vertically; the main axis here is the vertical
-            // axis because Columns are vertical (the cross axis would be
-            // horizontal).
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              TextField(
-                controller: _controller1,
-                onSubmitted: _setURL,
-              ),
-              TextField(
-                controller: _controller2,
-                onSubmitted: _setOrigin,
-              ),
-              Text(
-                '按钮被点击了:',
-              ),
-              Text(
-                '$_counter',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .display1,
-              ),
-              Text(barcode),
-            ],
-          )),
+        // Column is also a layout widget. It takes a list of children and
+        // arranges them vertically. By default, it sizes itself to fit its
+        // children horizontally, and tries to be as tall as its parent.
+        //
+        // Invoke "debug painting" (press "p" in the console, choose the
+        // "Toggle Debug Paint" action from the Flutter Inspector in Android
+        // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+        // to see the wireframe for each widget.
+        //
+        // Column has various properties to control how it sizes itself and
+        // how it positions its children. Here we use mainAxisAlignment to
+        // center the children vertically; the main axis here is the vertical
+        // axis because Columns are vertical (the cross axis would be
+        // horizontal).
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          TextField(
+            controller: _controller1,
+            onSubmitted: _setURL,
+          ),
+          DropdownButton<String>(
+            value: origin,
+            onChanged: (String string) => setState(() => origin = string),
+//            selectedItemBuilder: (BuildContext context) {
+//              return originItems.map<Widget>((Map<String, String> item) {
+//                return Text(item["text"]);
+//              }).toList();
+//            },
+            items: originItems.map((Map<String, String> item) {
+              return DropdownMenuItem<String>(
+                child: Text(item["text"]),
+                value: item["value"],
+              );
+            }).toList(),
+          ),
+          Text(
+            '按钮被点击了:',
+          ),
+          Text(
+            '$_counter',
+            style: Theme.of(context).textTheme.display1,
+          ),
+          Text(barcode),
+        ],
+      )),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
